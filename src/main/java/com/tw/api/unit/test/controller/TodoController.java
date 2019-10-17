@@ -68,7 +68,7 @@ public class TodoController {
     public HttpEntity<ResourceWithUrl> updateTodo(@PathVariable("todo-id") long id, @RequestBody Todo newTodo) {
         Optional<Todo> todoOptional = todoRepository.findById(id);
 
-        if (!todoOptional.isPresent()) {
+        if (todoOptional != null && !todoOptional.isPresent()) {
             return new ResponseEntity<>(NOT_FOUND);
         } else if (newTodo == null) {
             return new ResponseEntity<>(BAD_REQUEST);

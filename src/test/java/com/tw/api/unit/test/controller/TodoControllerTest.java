@@ -20,8 +20,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -97,5 +96,65 @@ public class TodoControllerTest {
         }
     }
 
+    @Test
+    public void deleteOneTodo() throws Exception {
+        Optional<Todo> todo = Optional.of(new Todo(1, "title", true, 1));
+        when(todoRepository.findById(1)).thenReturn(todo);
 
+        ResultActions result = mvc.perform(delete("/todos/{id}" , 1L));
+
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    public void didNotFindDeleteOneTodo() throws Exception {
+        Optional<Todo> todo = Optional.of(new Todo(1, "title", true, 1));
+        when(todoRepository.findById(1)).thenReturn(todo);
+
+        ResultActions result = mvc.perform(delete("/todos/{id}" , 2L));
+
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void updateTodo() throws Exception {
+        Todo newTodo = new Todo(2, "updated title", true, 1);
+        Optional<Todo> todo = Optional.of(new Todo(1, "title", true, 1));
+        when(todoRepository.findById(1)).thenReturn(todo);
+
+        ResultActions result = mvc.perform(patch("/todos/{id}" , 1L, newTodo)
+                                    .content(asJsonString(newTodo))
+                                    .contentType(MediaType.APPLICATION_JSON));
+
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is("updated title")))
+                .andExpect(jsonPath("$.completed", is(true)))
+                .andExpect(jsonPath("$.order", is(1)));
+    }
+
+    @Test
+    public void didNotFoundUpdateTodo() throws Exception {
+        Todo newTodo = new Todo(2, "updated title", true, 1);
+        Optional<Todo> todo = Optional.of(new Todo(1, "title", true, 1));
+        when(todoRepository.findById(1)).thenReturn(todo);
+
+        ResultActions result = mvc.perform(patch("/todos/{id}" , 2L, newTodo)
+                .content(asJsonString(newTodo))
+                .contentType(MediaType.APPLICATION_JSON));
+
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void nullUpdateTodo() throws Exception {
+        Todo newTodo = new Todo(2, "updated title", true, 1);
+        Optional<Todo> todo = Optional.of(new Todo(1, "title", true, 1));
+        when(todoRepository.findById(1)).thenReturn(null);
+
+        ResultActions result = mvc.perform(patch("/todos/{id}" , 1L, null)
+                .content(asJsonString(null))
+                .contentType(MediaType.APPLICATION_JSON));
+
+        result.andExpect(status().isBadRequest());
+    }
 }
